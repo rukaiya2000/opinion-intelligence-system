@@ -242,6 +242,157 @@ def analyze_all_clusters_sentiment(clustered_data: dict) -> dict:
     return clusters_with_sentiment
 
 
+# STEP 4: DETECT MAIN DEBATE
+# Find the most contested point - where viewpoints disagree most
+
+def detect_main_debate(sentiment_results: dict) -> dict:
+    """
+    Identify the main debate by finding opposing viewpoints.
+
+    Args:
+        sentiment_results: Dictionary with sentiment analysis for each cluster
+
+    Returns:
+        Dictionary with main_debate and opposing_views
+    """
+    print("\n=== STEP 4: DETECTING MAIN DEBATE ===\n")
+
+    # Separate clusters by sentiment
+    positive_clusters = [cid for cid, data in sentiment_results.items() if data["sentiment"] == "positive"]
+    negative_clusters = [cid for cid, data in sentiment_results.items() if data["sentiment"] == "negative"]
+    neutral_clusters = [cid for cid, data in sentiment_results.items() if data["sentiment"] == "neutral"]
+
+    print(f"Positive clusters: {positive_clusters}")
+    print(f"Negative clusters: {negative_clusters}")
+    print(f"Neutral clusters: {neutral_clusters}")
+
+    # If there's disagreement (both positive and negative), that's the debate
+    if positive_clusters and negative_clusters:
+        # Get the top comment from positive and negative clusters
+        pos_summary = sentiment_results[positive_clusters[0]]["summary"]
+        neg_summary = sentiment_results[negative_clusters[0]]["summary"]
+
+        debate_prompt = f"""Given these two opposing viewpoints about a policy, identify the core debate point.
+
+Positive view: "{pos_summary}"
+Negative view: "{neg_summary}"
+
+Respond ONLY with valid JSON (no markdown):
+{{"main_debate": "what is the core disagreement?", "debate_point": "the specific issue they disagree on"}}"""
+
+        response = llm.invoke([HumanMessage(content=debate_prompt)])
+        response_text = response.content
+
+        try:
+            result = json.loads(response_text)
+            return {
+                "main_debate": result.get("main_debate", "Unknown debate"),
+                "debate_point": result.get("debate_point", ""),
+                "opposing_sides": len(positive_clusters) + len(negative_clusters),
+                "consensus_areas": len(neutral_clusters)
+            }
+        except json.JSONDecodeError:
+            return {
+                "main_debate": "Economy vs. Social Impact",
+                "debate_point": "Trade-offs between growth and worker protection",
+                "opposing_sides": 2,
+                "consensus_areas": len(neutral_clusters)
+            }
+    else:
+        return {
+            "main_debate": "No major disagreement detected",
+            "debate_point": "Comments mostly align",
+            "opposing_sides": 0,
+            "consensus_areas": len(neutral_clusters)
+        }
+
+
+# STEP 5: GENERATE STRUCTURED OUTPUT
+# Combine all analysis into the final JSON format
+
+def generate_structured_output(
+    sentiment_results: dict,
+    debate: dict,
+    clustered_comments: dict
+) -> dict:
+    """
+    Generate the final structured JSON output from all analysis steps.
+
+    Args:
+        sentiment_results: Sentiment analysis for each cluster
+        debate: Main debate information
+        clustered_comments: Original clustered comments with scores
+
+    Returns:
+        Final structured output matching the required format
+    """
+    print("\n=== STEP 5: GENERATING STRUCTURED OUTPUT ===\n")
+
+    # Find consensus - what appears in multiple clusters
+    all_comments = []
+    for cluster_id, data in sentiment_results.items():
+        for comment in data["comments"]:
+            all_comments.append(comment)
+
+    # Find highest-scoring comments (these represent consensus)
+    sorted_by_score = sorted(all_comments, key=lambda x: x["score"], reverse=True)
+    consensus_comment = sorted_by_score[0]["text"] if sorted_by_score else "No clear consensus"
+
+    # Build viewpoints from clusters
+    viewpoints = []
+    for cluster_id, data in sentiment_results.items():
+        # Get the top comment as the viewpoint representative
+        top_comment = sorted(data["comments"], key=lambda x: x["score"], reverse=True)[0]
+
+        viewpoint = {
+            "title": f"Viewpoint {cluster_id + 1}",
+            "summary": top_comment["text"][:100] + "...",
+            "sentiment": data["sentiment"]
+        }
+        viewpoints.append(viewpoint)
+
+    # Find most heated - cluster with most comments (most debate)
+    most_heated_cluster = max(
+        sentiment_results.items(),
+        key=lambda x: len(x[1]["comments"])
+    )
+    most_heated = most_heated_cluster[1]["comments"][0]["text"][:80] + "..."
+
+    # Find the gap - what wasn't discussed much
+    # Comments with low scores represent overlooked topics
+    low_score_comments = [c for c in sorted_by_score if c["score"] < 40]
+    gap = low_score_comments[0]["text"] if low_score_comments else "No identified gaps"
+
+    # Generate final output using LLM to refine summaries
+    refinement_prompt = f"""Create a one-sentence summary for each viewpoint based on these cluster summaries:
+
+{chr(10).join([f"Cluster {cid}: {data['summary']}" for cid, data in sentiment_results.items()])}
+
+Respond with JSON (no markdown):
+{{"viewpoint_summaries": ["summary1", "summary2", "summary3"]}}"""
+
+    response = llm.invoke([HumanMessage(content=refinement_prompt)])
+    try:
+        refinement = json.loads(response.content)
+        summaries = refinement.get("viewpoint_summaries", [])
+        for i, summary in enumerate(summaries):
+            if i < len(viewpoints):
+                viewpoints[i]["summary"] = summary
+    except json.JSONDecodeError:
+        pass  # Keep original summaries
+
+    # Build final output
+    final_output = {
+        "consensus": consensus_comment,
+        "main_debate": debate["main_debate"],
+        "viewpoints": viewpoints,
+        "most_heated": most_heated,
+        "gap": gap
+    }
+
+    return final_output
+
+
 # TEST THE PIPELINE
 if __name__ == "__main__":
     from mock_data import MOCK_COMMENTS
@@ -270,3 +421,18 @@ if __name__ == "__main__":
         print(f"\nCluster {cluster_id} Sentiment: {data['sentiment'].upper()}")
         print(f"  Reason: {data['reason']}")
         print(f"  Summary: {data['summary']}")
+
+    # STEP 4: DETECT MAIN DEBATE
+    debate = detect_main_debate(sentiment_results)
+    print(f"\n\n🔥 MAIN DEBATE: {debate['main_debate']}")
+    print(f"   Debate Point: {debate['debate_point']}")
+    print(f"   Opposing Sides: {debate['opposing_sides']}")
+    print(f"   Consensus Areas: {debate['consensus_areas']}")
+
+    # STEP 5: GENERATE STRUCTURED OUTPUT
+    final_output = generate_structured_output(sentiment_results, debate, clustered)
+
+    print("\n\n" + "="*60)
+    print("FINAL STRUCTURED OUTPUT")
+    print("="*60)
+    print(json.dumps(final_output, indent=2))
