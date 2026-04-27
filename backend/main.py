@@ -31,7 +31,8 @@ async def test():
         "message": "Chrome extension can communicate with FastAPI",
         "config": {
             "api_base": OPENAI_API_BASE,
-            "model": OPENAI_MODEL
+            "model": OPENAI_MODEL,
+            "status": "API key loaded" if OPENAI_API_KEY else "API key not found in environment"
         }
     }
 
