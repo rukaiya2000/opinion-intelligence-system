@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Reddit Opinion Analyzer",
+  "version": "1.0",
+  "description": "Analyze Reddit thread opinions with AI",
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.reddit.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.reddit.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Reddit Opinion Analyzer"
+  }
+}
