@@ -200,10 +200,11 @@ function injectResultStylesOnce() {
       width: 100%;
       margin: 10px 0 12px 0;
       padding: 12px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
-      border: 1px solid rgba(102, 126, 234, 0.35);
-      color: #e0e0e0;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #edeff1;
+      box-shadow: 0 1px 4px rgba(26, 26, 27, 0.12);
+      color: #1a1a1b;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
       line-height: 1.45;
@@ -217,26 +218,27 @@ function injectResultStylesOnce() {
       display: flex;
       align-items: center;
       gap: 12px;
-      color: #a8b9ff;
+      color: #ff4500;
     }
     .reddit-opinion-results[data-roa-inline] .roa-spinner {
       width: 22px; height: 22px;
-      border: 2px solid rgba(102,126,234,0.35);
-      border-top-color: #667eea;
+      border: 2px solid #ffd8cc;
+      border-top-color: #ff4500;
       border-radius: 50%;
       animation: roa-spin 0.85s linear infinite;
     }
     @keyframes roa-spin { to { transform: rotate(360deg); } }
     .reddit-opinion-results .roa-err {
-      color: #f87171;
+      color: #d93a00;
       margin: 0;
     }
     .reddit-opinion-results .roa-section {
-      background: rgba(22,33,62,0.95);
-      border-left: 3px solid #667eea;
+      background: #ffffff;
+      border: 1px solid #edeff1;
+      border-left: 4px solid #ff4500;
       padding: 10px 12px;
       margin-bottom: 10px;
-      border-radius: 6px;
+      border-radius: 10px;
     }
     .reddit-opinion-results .roa-section-header {
       display: flex;
@@ -247,38 +249,49 @@ function injectResultStylesOnce() {
       margin: 0;
       font-size: 13px;
       font-weight: 600;
-      color: #667eea;
+      color: #ff4500;
     }
     .reddit-opinion-results .roa-icon { margin-right: 8px; font-size: 16px; }
     .reddit-opinion-results .roa-body {
       margin: 0;
-      color: #d0d0d0;
+      color: #1c1c1c;
       font-size: 12px;
     }
     .reddit-opinion-results .roa-viewpoints-list { display: flex; flex-direction: column; gap: 8px; }
     .reddit-opinion-results .roa-viewpoint {
-      background: rgba(15,52,96,0.55);
+      background: #f8f9fa;
       padding: 8px 10px;
       border-radius: 6px;
-      border-left: 3px solid #999;
+      border-left: 3px solid #ffb899;
     }
-    .reddit-opinion-results .roa-viewpoint.roa-positive { border-left-color: #4ade80; }
-    .reddit-opinion-results .roa-viewpoint.roa-negative { border-left-color: #f87171; }
-    .reddit-opinion-results .roa-viewpoint.roa-neutral { border-left-color: #60a5fa; }
-    .reddit-opinion-results .roa-viewpoint-title { font-weight: 600; color: #a8b9ff; font-size: 12px; margin-bottom: 4px; }
-    .reddit-opinion-results .roa-viewpoint-sentiment { font-size: 11px; color: #888; margin-bottom: 4px; }
-    .reddit-opinion-results .roa-viewpoint-summary { font-size: 12px; margin: 0; color: #d0d0d0; }
+    .reddit-opinion-results .roa-viewpoint.roa-positive { border-left-color: #46d160; }
+    .reddit-opinion-results .roa-viewpoint.roa-negative { border-left-color: #ff4500; }
+    .reddit-opinion-results .roa-viewpoint.roa-neutral { border-left-color: #7193ff; }
+    .reddit-opinion-results .roa-viewpoint-title { font-weight: 600; color: #1a1a1b; font-size: 12px; margin-bottom: 4px; }
+    .reddit-opinion-results .roa-viewpoint-sentiment { font-size: 11px; color: #6a6d70; margin-bottom: 4px; }
+    .reddit-opinion-results .roa-viewpoint-summary { font-size: 12px; margin: 0; color: #1c1c1c; }
     button[data-roa-analyze-btn] {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      background: #ff4500 !important;
       color: white !important;
-      border: none !important;
+      border: 1px solid #ff4500 !important;
       padding: 8px 16px !important;
       border-radius: 20px !important;
       font-weight: bold !important;
       cursor: pointer !important;
       font-size: 14px !important;
+      line-height: 1 !important;
+      height: 34px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      vertical-align: middle !important;
+      white-space: nowrap !important;
       margin-left: 10px !important;
       transition: transform 0.2s;
+    }
+    button[data-roa-analyze-btn]:hover {
+      background: #e03d00 !important;
+      border-color: #e03d00 !important;
     }
     button[data-roa-analyze-btn][disabled] { opacity: 0.65; cursor: wait !important; }
   `;
@@ -297,7 +310,7 @@ function injectForShareButton(shareBtn) {
   const analyzeButton = document.createElement("button");
   analyzeButton.type = "button";
   analyzeButton.setAttribute("data-roa-analyze-btn", "1");
-  analyzeButton.textContent = "🧠 Analyze";
+  analyzeButton.textContent = "Analyze";
 
   analyzeButton.addEventListener("mouseenter", () => {
     if (!analyzeButton.disabled) analyzeButton.style.transform = "scale(1.05)";
