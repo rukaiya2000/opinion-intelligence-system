@@ -1,8 +1,6 @@
 // CONTENT SCRIPT
 // Runs on Reddit pages — injects "Analyze Thread" + inline results below each post's controls
 
-console.log("Reddit Opinion Analyzer loaded on:", window.location.href);
-
 /**
  * Real extension namespaces live on globalThis — never use a lexical `chrome` name,
  * since `window.chrome` can be overwritten by DOM (e.g. id="chrome") in the shared window.
@@ -391,8 +389,6 @@ function injectForShareButton(shareBtn) {
 
   toolbar.appendChild(analyzeButton);
   toolbar.insertAdjacentElement("afterend", resultsOuter);
-
-  console.log("✅ Analyze + inline panel injected for:", permalink());
 }
 
 /** Collect distinct Share buttons (one actionable control per post row) */
@@ -425,7 +421,6 @@ function findShareAnchors() {
 
 function injectAnalyzeButtons() {
   const anchors = findShareAnchors();
-  console.log(`Reddit Opinion: found ${anchors.length} Share anchor(s)`);
   for (const shareBtn of anchors) {
     try {
       injectForShareButton(shareBtn);
