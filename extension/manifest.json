@@ -4,12 +4,12 @@
   "version": "1.0",
   "description": "Analyze Reddit thread opinions with AI",
   "permissions": [
-    "scripting",
     "activeTab",
-    "tabs"
+    "storage"
   ],
   "host_permissions": [
-    "https://www.reddit.com/*"
+    "https://www.reddit.com/*",
+    "http://127.0.0.1/*"
   ],
   "background": {
     "service_worker": "background.js"

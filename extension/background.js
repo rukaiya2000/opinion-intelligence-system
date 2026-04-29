@@ -1,7 +1,7 @@
 // BACKGROUND SERVICE WORKER
 // Handles communication between content script and our FastAPI backend
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = "http://127.0.0.1:3001";
 
 console.log("Reddit Opinion Analyzer background worker started");
 
@@ -30,6 +30,7 @@ async function analyzeRedditPost(redditUrl, sendResponse) {
         reddit_url: redditUrl
       })
     });
+    console.log("Received response from backend:", response.status);
 
     if (!response.ok) {
       throw new Error(`Backend error: ${response.statusText}`);
@@ -43,6 +44,7 @@ async function analyzeRedditPost(redditUrl, sendResponse) {
       success: true,
       data: analysisResult
     });
+    console.log("Sent analysis result to popup");
 
     // Store result for popup to access
     chrome.storage.local.set({
@@ -51,7 +53,8 @@ async function analyzeRedditPost(redditUrl, sendResponse) {
     });
 
   } catch (error) {
-    console.error("Error analyzing post:", error);
+    console.error("❌ Error analyzing post:", error.message);
+    console.error("Full error:", error);
     sendResponse({
       success: false,
       error: error.message
